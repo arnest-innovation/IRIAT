@@ -54,6 +54,33 @@ def generate_embeddings(text):
 
 
 
+# ✅ Store PDF Data in PostgreSQL
+def store_vectors_in_db(pdf_name, pdf_url, vector, extracted_text):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS pdf_vectors (
+                id SERIAL PRIMARY KEY,
+                pdf_name TEXT,
+                pdf_url TEXT,
+                extracted_text TEXT,
+                embedding vector(1536)
+            );
+        """)
+
+        vector_str = "[" + ",".join(map(str, vector)) + "]"
+
+        cur.execute("INSERT INTO pdf_vectors (pdf_name, pdf_url, embedding, extracted_text) VALUES (%s, %s, %s::vector, %s)",
+                    (pdf_name, pdf_url, vector_str, extracted_text))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("✅ PDF uploaded successfully with extracted text!")
+    except Exception as e:
+        print("❌ Error:", e)
 
 
 
