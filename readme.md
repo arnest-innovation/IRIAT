@@ -121,7 +121,7 @@ PostgreSQL is used for **storing extracted text embeddings** and performing **ve
 - Used for **extracting text** from PDFs. It supports complex PDF structures and ensures reliable text extraction.
 
 ### **🔹 Ollama**
-- Runs the **DeepSeek-R1:1.5B** model to generate **vector embeddings** for the extracted text.
+- Runs the **deepseek-r1:7b** model to generate **vector embeddings** for the extracted text.
 
 ### **🔹 PostgreSQL + pgVector**
 - Stores **vector embeddings** and allows **similarity search** using **cosine similarity**.
