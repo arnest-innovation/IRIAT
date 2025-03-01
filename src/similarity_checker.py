@@ -3,7 +3,7 @@ import ollama
 import fitz  # PyMuPDF for PDF text extraction
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from fastapi import File, UploadFile
+from fastapi import File, UploadFile, Form
 from store_to_db import DB_CONFIG  # Importing DB config
 
 
@@ -55,13 +55,46 @@ def convert_string_to_vector(vector_str):
         return None
 
 
-# ✅ Fetch stored vectors from PostgreSQL
-def fetch_stored_vectors():
+# ✅ Store PDF Data in PostgreSQL (Updated to include category)
+def store_vectors_in_db(pdf_name, pdf_url, vector, extracted_text, category):
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
 
-        cur.execute("SELECT pdf_url, embedding, extracted_text FROM pdf_vectors;")
+        # ✅ Create table with category column
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS pdf_vectors (
+                id SERIAL PRIMARY KEY,
+                pdf_name TEXT,
+                pdf_url TEXT,
+                extracted_text TEXT,
+                embedding vector(1536),
+                category TEXT 
+            );
+        """)
+
+        vector_str = "[" + ",".join(map(str, vector)) + "]"
+
+        # ✅ Insert data including the category
+        cur.execute("INSERT INTO pdf_vectors (pdf_name, pdf_url, embedding, extracted_text, category) VALUES (%s, %s, %s::vector, %s, %s)",
+                    (pdf_name, pdf_url, vector_str, extracted_text, category))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        print(f"✅ PDF uploaded successfully with extracted text and category '{category}'!")
+    except Exception as e:
+        print("❌ Error:", e)
+
+
+# ✅ Fetch stored vectors from PostgreSQL (Updated to filter by category)
+def fetch_stored_vectors(category):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        # ✅ Retrieve only PDFs that match the given category
+        cur.execute("SELECT pdf_url, embedding, extracted_text FROM pdf_vectors WHERE category = %s;", (category,))
         data = cur.fetchall()  # List of tuples (pdf_url, embedding, extracted_text)
 
         cur.close()
@@ -99,8 +132,8 @@ def calculate_similarity(new_vector, stored_vectors):
     return results
 
 
-# ✅ API Function for Similarity Check
-async def check_pdf_similarity(file: UploadFile = File(...)):
+# ✅ API Function for Similarity Check (Updated to accept category)
+async def check_pdf_similarity(file: UploadFile = File(...), category: str = Form(...)):
     pdf_text = extract_text_from_pdf(file.file)
     if not pdf_text:
         return {"error": "Could not extract text from the PDF"}
@@ -109,9 +142,9 @@ async def check_pdf_similarity(file: UploadFile = File(...)):
     if new_vector is None:
         return {"error": "Failed to generate embeddings"}
 
-    stored_vectors = fetch_stored_vectors()
+    stored_vectors = fetch_stored_vectors(category)
     if not stored_vectors:
-        return {"error": "No stored projects found in the database"}
+        return {"error": f"No stored projects found in the database for category: {category}"}
 
     matched_results = calculate_similarity(new_vector, stored_vectors)
 

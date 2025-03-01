@@ -54,44 +54,47 @@ def generate_embeddings(text):
 
 
 
-# ✅ Store PDF Data in PostgreSQL
-def store_vectors_in_db(pdf_name, pdf_url, vector, extracted_text):
+# ✅ Store PDF Data in PostgreSQL (Updated to include category)
+def store_vectors_in_db(pdf_name, pdf_url, vector, extracted_text, category):
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
 
+        # ✅ Create table with category column
         cur.execute("""
             CREATE TABLE IF NOT EXISTS pdf_vectors (
                 id SERIAL PRIMARY KEY,
                 pdf_name TEXT,
                 pdf_url TEXT,
                 extracted_text TEXT,
-                embedding vector(1536)
+                embedding vector(1536),
+                category TEXT  -- ✅ New field for project category
             );
         """)
 
         vector_str = "[" + ",".join(map(str, vector)) + "]"
 
-        cur.execute("INSERT INTO pdf_vectors (pdf_name, pdf_url, embedding, extracted_text) VALUES (%s, %s, %s::vector, %s)",
-                    (pdf_name, pdf_url, vector_str, extracted_text))
+        # ✅ Insert data including the category
+        cur.execute("INSERT INTO pdf_vectors (pdf_name, pdf_url, embedding, extracted_text, category) VALUES (%s, %s, %s::vector, %s, %s)",
+                    (pdf_name, pdf_url, vector_str, extracted_text, category))
 
         conn.commit()
         cur.close()
         conn.close()
-        print("✅ PDF uploaded successfully with extracted text!")
+        print(f"✅ PDF uploaded successfully with extracted text and category '{category}'!")
     except Exception as e:
         print("❌ Error:", e)
 
 
 
-# ✅ Process PDF (Now Accepts PDF URL)
-def process_pdf(pdf_path, pdf_url):
+# ✅ Process PDF (Now Accepts Category)
+def process_pdf(pdf_path, pdf_url, category):
     pdf_name = pdf_path.split("/")[-1]
     text = extract_text_from_pdf(pdf_path)
     if text:
         vector = generate_embeddings(text)
         if vector:
-            store_vectors_in_db(pdf_name, pdf_url, vector, text)  # ✅ Pass extracted_text
+            store_vectors_in_db(pdf_name, pdf_url, vector, text, category)  # ✅ Pass category
         else:
             print("❌ Failed to generate vector.")
     else:

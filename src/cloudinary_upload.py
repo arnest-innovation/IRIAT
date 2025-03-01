@@ -12,7 +12,7 @@ cloudinary.config(
 )
 
 # ✅ Function to Upload PDF & Call DB Storage
-def upload_pdf(file_path):
+def upload_pdf(file_path ,category):
     response = cloudinary.uploader.upload(
         file_path, 
         resource_type="raw",  # Important for PDFs
@@ -22,7 +22,7 @@ def upload_pdf(file_path):
     print("Uploaded PDF URL:", pdf_url)
 
     # ✅ Call the function from `store_to_db.py`
-    process_pdf(file_path, pdf_url)
+    process_pdf(file_path, pdf_url , category)
 
 # ✅ Example Usage
 if __name__ == "__main__":
