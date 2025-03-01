@@ -45,7 +45,7 @@ def extract_text_from_pdf(file):
 def generate_embeddings(text):
     try:
         print("Generating embeddings for text:", text[:500])  # Print first 500 characters
-        response = ollama.embeddings(model="deepseek-r1:1.5b", prompt=text)
+        response = ollama.embeddings(model="deepseek-r1:7b", prompt=text)
         embedding = response["embedding"]
         return embedding
     except Exception as e:
@@ -67,7 +67,7 @@ def store_vectors_in_db(pdf_name, pdf_url, vector, extracted_text, category):
                 pdf_name TEXT,
                 pdf_url TEXT,
                 extracted_text TEXT,
-                embedding vector(1536),
+                embedding vector(3584),
                 category TEXT  -- ✅ New field for project category
             );
         """)

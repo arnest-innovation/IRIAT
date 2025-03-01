@@ -36,7 +36,7 @@ def extract_text_from_pdf(file):
 def generate_embeddings(text):
     try:
         print("Generating embeddings for text:", text[:500])
-        response = ollama.embeddings(model="deepseek-r1:1.5b", prompt=text)
+        response = ollama.embeddings(model="deepseek-r1:7b", prompt=text)
         embedding = np.array(response["embedding"])
         return embedding
     except Exception as e:
@@ -68,7 +68,7 @@ def store_vectors_in_db(pdf_name, pdf_url, vector, extracted_text, category):
                 pdf_name TEXT,
                 pdf_url TEXT,
                 extracted_text TEXT,
-                embedding vector(1536),
+                embedding vector(3584),
                 category TEXT 
             );
         """)
@@ -173,7 +173,7 @@ async def check_pdf_similarity(file: UploadFile = File(...), category: str = For
         Summarize the key differences and how similar they are.
         """
 
-        response = ollama.chat(model="deepseek-r1:1.5b", messages=[{"role": "user", "content": prompt}])
+        response = ollama.chat(model="deepseek-r1:7b", messages=[{"role": "user", "content": prompt}])
 
         final_results.append({
             "pdf_url": pdf_url,
