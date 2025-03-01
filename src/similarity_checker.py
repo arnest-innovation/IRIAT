@@ -44,3 +44,58 @@ def generate_embeddings(text):
         return None
 
 
+# ✅ Convert PostgreSQL vector string to NumPy array
+def convert_string_to_vector(vector_str):
+    try:
+        vector_str = vector_str.strip("[]")  # Remove square brackets
+        vector = np.array([float(x) for x in vector_str.split(",")])
+        return vector
+    except Exception as e:
+        print("Error converting vector string:", e)
+        return None
+
+
+# ✅ Fetch stored vectors from PostgreSQL
+def fetch_stored_vectors():
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        cur.execute("SELECT pdf_url, embedding, extracted_text FROM pdf_vectors;")
+        data = cur.fetchall()  # List of tuples (pdf_url, embedding, extracted_text)
+
+        cur.close()
+        conn.close()
+
+        # Convert stored embeddings from string to NumPy arrays
+        processed_data = [
+            (pdf_url, convert_string_to_vector(embedding), extracted_text) for pdf_url, embedding, extracted_text in data
+        ]
+
+        return processed_data
+    except Exception as e:
+        print("❌ Error fetching stored vectors:", e)
+        return []
+
+
+# ✅ Calculate similarity scores and filter those above 10%
+def calculate_similarity(new_vector, stored_vectors):
+    results = []
+    
+    for pdf_url, stored_vector, extracted_text in stored_vectors:
+        if stored_vector is not None:
+            try:
+                similarity = cosine_similarity([new_vector], [stored_vector])[0][0] * 100  # Convert to percentage
+                similarity_percentage = round(similarity, 2)
+                if similarity_percentage >= 10:  # Only consider PDFs with more than 10% similarity
+                    results.append({
+                        "pdf_url": pdf_url,
+                        "similarity_score": similarity_percentage,
+                        "extracted_text": extracted_text
+                    })
+            except Exception as e:
+                print("Error calculating similarity:", e)
+
+    return results
+
+
