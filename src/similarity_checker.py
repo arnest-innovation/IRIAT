@@ -99,3 +99,56 @@ def calculate_similarity(new_vector, stored_vectors):
     return results
 
 
+# ✅ API Function for Similarity Check
+async def check_pdf_similarity(file: UploadFile = File(...)):
+    pdf_text = extract_text_from_pdf(file.file)
+    if not pdf_text:
+        return {"error": "Could not extract text from the PDF"}
+
+    new_vector = generate_embeddings(pdf_text)
+    if new_vector is None:
+        return {"error": "Failed to generate embeddings"}
+
+    stored_vectors = fetch_stored_vectors()
+    if not stored_vectors:
+        return {"error": "No stored projects found in the database"}
+
+    matched_results = calculate_similarity(new_vector, stored_vectors)
+
+    if not matched_results:
+        return {"error": "No similar projects found."}
+
+    # ✅ Compute overall average similarity score
+    avg_score = sum(item["similarity_score"] for item in matched_results) / len(matched_results)
+
+    # ✅ Generate LLM insights for each matched project
+    final_results = []
+    for match in matched_results:
+        pdf_url = match["pdf_url"]
+        similarity_score = match["similarity_score"]
+        retrieved_text = match["extracted_text"]
+
+        # Generate comparison summary using DeepSeek
+        prompt = f"""
+        You are an AI assistant for academic research. 
+        Compare the following two documents:
+
+        **New Document:** {pdf_text[:1000]}...
+
+        **Stored Document:** {retrieved_text[:1000]}...
+
+        Summarize the key differences and how similar they are.
+        """
+
+        response = ollama.chat(model="deepseek-r1:1.5b", messages=[{"role": "user", "content": prompt}])
+
+        final_results.append({
+            "pdf_url": pdf_url,
+            "similarity_score": similarity_score,
+            "llm_comparison_summary": response["message"]["content"]
+        })
+
+    return {
+        "average_similarity_score": round(avg_score, 2),
+        "matched_projects": final_results
+    }
