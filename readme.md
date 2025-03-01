@@ -147,3 +147,137 @@ This project helps **compare PDF documents** for **similarity detection** using 
 
 ✅ Now your **PDF Similarity Checker** is set up and ready to use! 🚀
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- UNSTRUCTURED  -->
+
+
+
+steps -
+
+ollama serve 
+
+pgrep ollama - check if it's runnign 
+pkill ollama or kill -9 $(pgrep ollama)  - kill if don't want
+
+source venv/bin/activate
+cd src
+python app.py
+
+
+
+Postgress -
+
+
+To **stop PostgreSQL**, use the following command:
+
+```bash
+brew services stop postgresql@17
+```
+
+This will stop the running PostgreSQL service. You can verify its status using:
+
+```bash
+brew services list
+```
+
+If you ever need to restart it, you can use:
+
+```bash
+brew services start postgresql@17
+```
+
+
+
+To start the **PostgreSQL shell (psql)** after starting PostgreSQL, use the following command:
+
+```bash
+psql -U postgres -d postgres
+```
+
+This will log you into the PostgreSQL shell as the `postgres` user and connect to the `postgres` database.
+
+If you created another user, replace `postgres` with your username:
+
+```bash
+psql -U your_username -d postgres
+```
+
+Once inside the PostgreSQL shell, you can run SQL commands.
+
+To exit, type:
+
+```sql
+\q
+```
+
+
+
+
+
+TO RUN API - # ✅ Run the server using:
+ - uvicorn api:app --reload
+
+
+
+
+
+
+MORE STRUCTURED -
+
+Yes! Your steps are almost correct. Here’s the **correct and structured order** to start everything properly:
+
+---
+
+### **Starting Your Environment**
+1️⃣ **Start PostgreSQL (if not running already)**  
+```bash
+brew services start postgresql@17
+```
+
+2️⃣ **Open PostgreSQL Shell (Optional: If you need to check something manually)**  
+```bash
+psql -U postgres -d postgres
+```
+
+3️⃣ **Start Ollama Server**  
+```bash
+ollama serve
+```
+
+4️⃣ **Activate Python Virtual Environment**  
+```bash
+source venv/bin/activate
+```
+
+5️⃣ **Navigate to the `src` Directory**  
+```bash
+cd src
+```
+
+6️⃣ **Run Your Python File**  
+```bash
+python <your_script>.py
+```
+
+---
+
+Now you are fully set up to **upload PDFs, generate embeddings, store them in PostgreSQL, and run queries!** 🚀 Let me know if you need any modifications.
+
+
+
+
+
+
+
