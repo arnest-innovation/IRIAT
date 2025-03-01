@@ -41,6 +41,17 @@ def extract_text_from_pdf(file):
 
 
 
+# ✅ Generate Vector Embeddings
+def generate_embeddings(text):
+    try:
+        print("Generating embeddings for text:", text[:500])  # Print first 500 characters
+        response = ollama.embeddings(model="deepseek-r1:1.5b", prompt=text)
+        embedding = response["embedding"]
+        return embedding
+    except Exception as e:
+        print("❌ Error generating embeddings:", e)
+        return None
+
 
 
 
